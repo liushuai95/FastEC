@@ -1,27 +1,33 @@
 package com.flj.latte.app;
 
+import android.os.Handler;
+
 import com.joanzapata.iconify.IconFontDescriptor;
 import com.joanzapata.iconify.Iconify;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.WeakHashMap;
+
+import okhttp3.Interceptor;
 
 public class Configurator {
 
-    private static final HashMap<String,Object> LATTE_CONFIGS = new HashMap<>();
+    private static final HashMap<Object,Object> LATTE_CONFIGS = new HashMap<>();
+    private static final Handler HANDLER = new Handler();
     private static final ArrayList<IconFontDescriptor> ICONS = new ArrayList<>();
+    private static final ArrayList<Interceptor> INTERCEPTORS = new ArrayList<>();
 
 
     public Configurator() {
-        LATTE_CONFIGS.put(ConfigKeys.CONFIG_READY.name(),false);
+        LATTE_CONFIGS.put(ConfigKeys.CONFIG_READY,false);
+        LATTE_CONFIGS.put(ConfigKeys.HANDLER, HANDLER);
     }
 
     public static Configurator getInstance(){
         return Holder.INSTANCE;
     }
 
-    final HashMap<String,Object> getLatteConfigs(){
+    final HashMap<Object,Object> getLatteConfigs(){
         return LATTE_CONFIGS;
     }
 
@@ -33,7 +39,7 @@ public class Configurator {
 
     public final void configure(){
         initIcons();//直接在配置的时候就初始化好
-        LATTE_CONFIGS.put(ConfigKeys.CONFIG_READY.name(),true);
+        LATTE_CONFIGS.put(ConfigKeys.CONFIG_READY,true);
     }
 
     private void initIcons(){
@@ -50,14 +56,26 @@ public class Configurator {
         return this;
     }
 
+    public final Configurator withInterceptor(Interceptor interceptor){
+        INTERCEPTORS.add(interceptor);
+        LATTE_CONFIGS.put(ConfigKeys.INTERCEPTOR, INTERCEPTORS);
+        return this;
+    }
+
+    public final Configurator withInterceptors(ArrayList<Interceptor> interceptors) {
+        INTERCEPTORS.addAll(interceptors);
+        LATTE_CONFIGS.put(ConfigKeys.INTERCEPTOR, INTERCEPTORS);
+        return this;
+    }
+
 
     public final Configurator withApiHost(String host){
-        LATTE_CONFIGS.put(ConfigKeys.API_HOST.name(),host);
+        LATTE_CONFIGS.put(ConfigKeys.API_HOST,host);
         return this;
     }
 
     private void checkConfiguration(){
-        final boolean isReady = (boolean) LATTE_CONFIGS.get(ConfigKeys.CONFIG_READY.name());
+        final boolean isReady = (boolean) LATTE_CONFIGS.get(ConfigKeys.CONFIG_READY);
         if (!isReady){
             throw new RuntimeException("Configuration is not ready,call configure");
         }
